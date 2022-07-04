@@ -1,0 +1,73 @@
+buildscript {
+    ext {
+        domainName = "plugin"
+        // java version
+        javaVersion = JavaVersion.VERSION_17
+        // lombok version
+        lombokVersion = "1.18.24"
+    }
+    repositories {
+        mavenCentral()
+    }
+    dependencies {
+        classpath "org.elasticsearch.gradle:build-tools:8.1.2"
+    }
+}
+plugins {
+    id 'java'
+    id 'java-library'
+    id 'maven-publish'
+    id 'idea'
+}
+
+apply plugin: 'elasticsearch.esplugin'
+
+esplugin {
+    name 'sample-ranking'
+    description 'Elasticsearch Korean analysis token filters plugin'
+    classname 'com.assdev.plugin.ranking.ScorePlugin'
+}
+
+wrapper {
+    gradleVersion = "7.4.1"
+    distributionUrl = "https://services.gradle.org/distributions/gradle-$gradleVersion-all.zip"
+}
+
+allprojects {
+    group "com.assadev.${domainName}"
+    idea {
+        module {
+            inheritOutputDirs = false
+        }
+    }
+}
+
+sourceCompatibility = "${javaVersion}"
+targetCompatibility = "${javaVersion}"
+
+// compile encoding 설정.
+tasks.withType(JavaCompile) {
+    options.encoding = "UTF-8"
+}
+
+configurations {
+    providedRuntime
+}
+
+dependencies {
+    implementation 'org.projectlombok:lombok:1.18.22'
+    annotationProcessor("org.projectlombok:lombok:${lombokVersion}")
+
+    implementation("org.elasticsearch:elasticsearch:8.3.1")
+
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.8.1'
+    testImplementation 'org.junit.jupiter:junit-jupiter-engine:5.8.1'
+}
+
+repositories {
+    mavenCentral()
+}
+
+test {
+    useJUnitPlatform()
+}

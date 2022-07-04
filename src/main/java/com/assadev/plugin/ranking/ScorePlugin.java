@@ -1,6 +1,6 @@
 package com.assadev.plugin.ranking;
 
-import com.assadev.plugin.ranking.boost.CategoryScoreFactory;
+import com.assadev.plugin.ranking.boost.CategoryBoostFactory;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.plugins.Plugin;
 import org.elasticsearch.plugins.ScriptPlugin;
@@ -22,9 +22,7 @@ public class ScorePlugin extends Plugin implements ScriptPlugin {
 
     private static class BoostScoreScriptEngine implements ScriptEngine {
         ///카테고리 부스트
-        private final String _CATEGORY_BOOST_SOURCE_VALUE = "category_boost_df";
-        ///시소러스 유사도
-        private final String _SIMILARITY_BOOST_SOURCE_VALUE = "similarity_boost_df";
+        private final String _CATEGORY_BOOST_SOURCE_NAME = "category_boost_df";
 
         @Override
         public String getType() {
@@ -40,8 +38,8 @@ public class ScorePlugin extends Plugin implements ScriptPlugin {
                         + context.name + "]");
             }
 
-            if (_CATEGORY_BOOST_SOURCE_VALUE.equals(scriptSource)) {
-                ScoreScript.Factory factory = CategoryScoreFactory::new;
+            if (_CATEGORY_BOOST_SOURCE_NAME.equals(scriptSource)) {
+                ScoreScript.Factory factory = CategoryBoostFactory::new;
                 return context.factoryClazz.cast(factory);
             }
 

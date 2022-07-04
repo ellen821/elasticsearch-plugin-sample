@@ -11,22 +11,22 @@ import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.util.Map;
 
-public class CategoryScoreFactory implements ScoreScript.LeafFactory {
+public class CategoryBoostFactory implements ScoreScript.LeafFactory {
     private final Map<String, Object> params;
     private final SearchLookup lookup;
     private final String field;
-    private final String category_id;
-    private final String operation_type;
-    private final int operation_score;
-    private final int default_score;
+    private final String categoryId;
+    private final String operationType;
+    private final int operationScore;
+    private final int defaultScore;
 
     private final static String FIELD_NAME = "field";
-    private final static String CATEGORYID_NAME = "category_id";
-    private final static String OPERATION_MODE_NAME = "operation_mode";
-    private final static String OPERATION_SCORE_NAME = "operation_score";
-    private final static String DEFAULT_SCORE_NAME = "default_score";
+    private final static String CATEGORYID_NAME = "categoryId";
+    private final static String OPERATION_MODE_NAME = "operationMode";
+    private final static String OPERATION_SCORE_NAME = "operationScore";
+    private final static String DEFAULT_SCORE_NAME = "defaultScore";
 
-    public CategoryScoreFactory(Map<String, Object> params, SearchLookup lookup) {
+    public CategoryBoostFactory(Map<String, Object> params, SearchLookup lookup) {
         if (params.containsKey(FIELD_NAME) == false) {
             throw new IllegalArgumentException(
                     "Missing parameter ["+FIELD_NAME+"]");
@@ -50,15 +50,15 @@ public class CategoryScoreFactory implements ScoreScript.LeafFactory {
         this.params = params;
         this.lookup = lookup;
         field = params.get(FIELD_NAME).toString();
-        category_id = params.get(CATEGORYID_NAME).toString();
-        operation_type = (String) params.get(OPERATION_MODE_NAME);
-        if(!operation_type.equals("-") && !operation_type.equals("+") && !operation_type.equals("except"))
+        categoryId = params.get(CATEGORYID_NAME).toString();
+        operationType = (String) params.get(OPERATION_MODE_NAME);
+        if(!operationType.equals("-") && !operationType.equals("+") && !operationType.equals("except"))
         {
             throw new IllegalArgumentException(
-                    "Missing operation_type ["+operation_type+"]");
+                    "Missing operation_type ["+ operationType +"]");
         }
-        operation_score = (int) params.get(OPERATION_SCORE_NAME);
-        default_score = (int) params.get(DEFAULT_SCORE_NAME);
+        operationScore = (int) params.get(OPERATION_SCORE_NAME);
+        defaultScore = (int) params.get(DEFAULT_SCORE_NAME);
     }
 
     @Override
@@ -66,20 +66,23 @@ public class CategoryScoreFactory implements ScoreScript.LeafFactory {
         return false;
     }
 
+//    @Override
+//    public ScoreScript newInstance(DocReader reader) throws IOException {
+//        return null;
+//    }
     @Override
     public ScoreScript newInstance(DocReader reader) throws IOException {
-        return null;
-    }
+//    public ScoreScript newInstance(LeafReaderContext context) throws IOException {
 
-    @Override
-    public ScoreScript newInstance(LeafReaderContext context) throws IOException {
-        PostingsEnum postings = context.reader().postings(new Term(field, category_id), PostingsEnum.ALL);
+        reader.
+
+        PostingsEnum postings = context.reader().postings(new Term(field, categoryId), PostingsEnum.ALL);
 
         if (postings == null) {
             return new ScoreScript(params, lookup, context) {
                 @Override
                 public double execute(ExplanationHolder explanationHolder) {
-                    return default_score;
+                    return defaultScore;
                 }
             };
         }
@@ -102,22 +105,22 @@ public class CategoryScoreFactory implements ScoreScript.LeafFactory {
             public double execute(ExplanationHolder explanationHolder) {
                 if (postings.docID() != currentDocid) {
                     //return 0.0d; //no match pass
-                    return default_score; //매칭이 되지 않아도 기본 스코어 적용
+                    return defaultScore; //매칭이 되지 않아도 기본 스코어 적용
                 }
                 try {
                     int freq = postings.freq();
                     if(freq <= 0)
                     {
-                        return default_score;
+                        return defaultScore;
                     }
 
                     float sum_score = 0.0f;
                     for (int i = 0; i < freq; i++) { // field에 token이 매칭 된 숫자 만큼 loop
-                        if(operation_type.equals("-")) {
-                            sum_score += default_score - operation_score;
+                        if(operationType.equals("-")) {
+                            sum_score += defaultScore - operationScore;
                         }
-                        else if(operation_type.equals("+")){
-                            sum_score += operation_score + default_score;
+                        else if(operationType.equals("+")){
+                            sum_score += operationScore + defaultScore;
                         }
                         postings.nextPosition(); //다음 토큰 매칭 구간으로 이동
                     }

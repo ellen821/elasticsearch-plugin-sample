@@ -4,6 +4,7 @@ import org.apache.lucene.index.LeafReaderContext;
 import org.apache.lucene.index.PostingsEnum;
 import org.apache.lucene.index.Term;
 import org.elasticsearch.script.DocReader;
+import org.elasticsearch.script.DocValuesDocReader;
 import org.elasticsearch.script.ScoreScript;
 import org.elasticsearch.search.lookup.SearchLookup;
 
@@ -74,19 +75,18 @@ public class CategoryBoostFactory implements ScoreScript.LeafFactory {
     public ScoreScript newInstance(DocReader reader) throws IOException {
 //    public ScoreScript newInstance(LeafReaderContext context) throws IOException {
 
-        reader.
-
-        PostingsEnum postings = context.reader().postings(new Term(field, categoryId), PostingsEnum.ALL);
+        DocValuesDocReader dvReader = ((DocValuesDocReader) reader);
+        PostingsEnum postings = dvReader.getLeafReaderContext().reader().postings(new Term(field, categoryId), PostingsEnum.ALL);
 
         if (postings == null) {
-            return new ScoreScript(params, lookup, context) {
+            return new ScoreScript(params, lookup, reader) {
                 @Override
                 public double execute(ExplanationHolder explanationHolder) {
                     return defaultScore;
                 }
             };
         }
-        return new ScoreScript(params, lookup, context) {
+        return new ScoreScript(params, lookup, reader) {
             int currentDocid = -1;
 
             @Override

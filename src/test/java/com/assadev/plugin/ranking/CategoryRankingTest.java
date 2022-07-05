@@ -1,4 +1,4 @@
-package com.assadev.plugin.ranking.boost;
+package com.assadev.plugin.ranking;
 
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.common.lucene.search.function.CombineFunction;
@@ -9,12 +9,12 @@ import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.index.query.functionscore.FunctionScoreQueryBuilder;
 import org.elasticsearch.index.query.functionscore.ScoreFunctionBuilders;
 import org.elasticsearch.index.query.functionscore.ScriptScoreFunctionBuilder;
+import org.elasticsearch.plugins.Plugin;
 import org.elasticsearch.script.Script;
 import org.elasticsearch.script.ScriptType;
 import org.elasticsearch.test.ESSingleNodeTestCase;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 import static org.elasticsearch.action.support.WriteRequest.RefreshPolicy.IMMEDIATE;
 import static org.elasticsearch.index.query.QueryBuilders.matchQuery;
@@ -24,6 +24,7 @@ import static org.elasticsearch.xcontent.XContentFactory.jsonBuilder;
 /***
  * 싱글 노드 통합 테스트
  * vm options 에 "-ea -Dtests.security.manager=false" 저장 후 실행
+ * 빌드는 intelliJ IDEA로 실행
  */
 public class CategoryRankingTest extends ESSingleNodeTestCase {
     /***
@@ -38,14 +39,12 @@ public class CategoryRankingTest extends ESSingleNodeTestCase {
         }
         client().admin().indices().prepareCreate("test")
                 .setMapping(jsonBuilder().startObject()
-                        .startObject("type1")
                         .startObject("properties")
                         .startObject("field1")
                         .field("type", "text")
                         .endObject()
                         .startObject("categoryIds")
                         .field("type", "text")
-                        .endObject()
                         .endObject()
                         .endObject()
                         .endObject())
@@ -61,10 +60,10 @@ public class CategoryRankingTest extends ESSingleNodeTestCase {
 
         Map<String, Object> params = new HashMap<>();
         params.put("field", "categoryIds");
-        params.put("category_id", "200002");
-        params.put("operation_mode", "+");
-        params.put("operation_score", 5);
-        params.put("default_score", 20);
+        params.put("categoryId", "200002");
+        params.put("operationMode", "+");
+        params.put("operationScore", 5);
+        params.put("defaultScore", 20);
 
         ScriptScoreFunctionBuilder score = ScoreFunctionBuilders.scriptFunction(
                 new Script(ScriptType.INLINE, "boost_script", "category_boost_df", params));
@@ -79,5 +78,12 @@ public class CategoryRankingTest extends ESSingleNodeTestCase {
         assertHitCount(searchResponse, 2);
         assertFirstHit(searchResponse, hasId("2"));
 
+    }
+
+    @Override
+    protected Collection<Class<? extends Plugin>> getPlugins() {
+        List<Class<? extends Plugin>> classPathPlugins = new ArrayList<>();
+        classPathPlugins.add(RankingBoostPlugin.class);
+        return classPathPlugins;
     }
 }

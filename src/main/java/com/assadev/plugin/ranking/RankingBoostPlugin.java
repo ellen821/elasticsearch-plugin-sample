@@ -1,6 +1,6 @@
 package com.assadev.plugin.ranking;
 
-import com.assadev.plugin.ranking.boost.CategoryBoostFactory;
+import com.assadev.plugin.ranking.factory.CategoryBoostFactory;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.plugins.Plugin;
 import org.elasticsearch.plugins.ScriptPlugin;
